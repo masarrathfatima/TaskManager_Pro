@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NewTodoForm } from "./NewTodoForm";
 import "./style.css";
-export default function App() {
-  const [newItem, setNewItem] = useState("");
-  const [todos, setTodos] = useState([]);
+import { TodoList } from "./TodoList";
 
-  function addTodo(titel) {
-    n;
+export default function App() {
+  const [todos, setTodos] = useState(() => {
+    const localValue = localStorage.getItem("ITEMS");
+    if (localValue == null) return [];
+
+    return Array.isArray(JSON.parse(localValue)) ? JSON.parse(localValue) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ITEMS", JSON.stringify(todos));
+  }, [todos]);
+
+  function addTodo(title) {
+    setTodos((currentTodos) => {
+      return [
+        ...currentTodos,
+        { id: crypto.randomUUID(), title, completed: false },
+      ];
+    });
   }
   function toggleTodo(id, completed) {
     setTodos((currentTodos) => {
@@ -26,30 +41,9 @@ export default function App() {
 
   return (
     <>
-      <NewTodoForm />
+      <NewTodoForm onSubmit={addTodo} />
       <h1 className='header'>Todo List</h1>
-      <ul className='list'>
-        {todos.length === 0 && "No Todos"}
-        {todos.map((todo) => {
-          return (
-            <li key={todo.id}>
-              <label>
-                <input
-                  type='checkbox'
-                  onChange={(e) => toggleTodo(todo.id, e.target.checked)}
-                  checked={todo.completed}
-                />
-                {todo.title}
-              </label>
-              <button
-                className='btn btn-danger'
-                onClick={() => deleteTodo(todo.id)}>
-                Delete
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <TodoList todos={todos} toggleTodo={toggleTodo} deleteTodo={deleteTodo} />
     </>
   );
 }
